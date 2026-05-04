@@ -1,0 +1,564 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  #app { padding: 1rem 0; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+  .header p {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+  }
+
+  .score-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: 10px 16px;
+    margin-bottom: 1.5rem;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+  .score-bar strong {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  .question-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .q-number {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-tertiary);
+    margin-bottom: 8px;
+  }
+  .q-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    line-height: 1.5;
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .option-btn {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: 14px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--color-text-primary);
+    text-align: left;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: background 0.15s, border-color 0.15s;
+    line-height: 1.4;
+  }
+  .option-btn:hover:not(:disabled) {
+    background: var(--color-background-secondary);
+    border-color: var(--color-border-primary);
+  }
+  .option-btn .letter {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .opt-a .letter { background: #E6F1FB; color: #0C447C; }
+  .opt-b .letter { background: #FAEEDA; color: #633806; }
+  .opt-c .letter { background: #EAF3DE; color: #27500A; }
+  .opt-d .letter { background: #FAECE7; color: #712B13; }
+
+  .option-btn.correct {
+    background: #EAF3DE;
+    border-color: #639922;
+    color: #27500A;
+  }
+  .option-btn.wrong {
+    background: #FCEBEB;
+    border-color: #E24B4A;
+    color: #501313;
+  }
+  .option-btn:disabled { cursor: default; }
+
+  .feedback-box {
+    border-radius: var(--border-radius-lg);
+    padding: 12px 16px;
+    margin-bottom: 1rem;
+    font-size: 14px;
+    display: none;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .feedback-box.correct {
+    background: #EAF3DE;
+    color: #27500A;
+    border: 0.5px solid #639922;
+  }
+  .feedback-box.wrong {
+    background: #FCEBEB;
+    color: #501313;
+    border: 0.5px solid #E24B4A;
+  }
+  .feedback-box .icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .feedback-box.show { display: flex; }
+  .feedback-box strong { font-weight: 500; }
+
+  .timer-bar-wrap {
+    height: 4px;
+    background: var(--color-background-secondary);
+    border-radius: 2px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .timer-bar {
+    height: 100%;
+    background: #378ADD;
+    border-radius: 2px;
+    transition: width 1s linear;
+  }
+
+  .nav-row {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .next-btn {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    display: none;
+  }
+  .next-btn:hover { background: var(--color-background-secondary); }
+  .next-btn.show { display: block; }
+
+  .results-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  .medal { font-size: 40px; margin-bottom: 12px; }
+  .score-big {
+    font-size: 40px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    line-height: 1;
+  }
+  .score-label {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-top: 6px;
+    margin-bottom: 1.5rem;
+  }
+  .results-msg {
+    font-size: 15px;
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  .results-sub {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+  .metrics-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 1.5rem;
+  }
+  .metric {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 10px 20px;
+    text-align: center;
+  }
+  .metric-val {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+  .metric-lbl {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+  }
+  .restart-btn {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 10px 28px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    margin-top: 1.5rem;
+    display: inline-block;
+  }
+  .restart-btn:hover { background: var(--color-background-secondary); }
+
+  .progress-dots {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-secondary);
+  }
+  .dot.done-correct { background: #639922; border-color: #639922; }
+  .dot.done-wrong { background: #E24B4A; border-color: #E24B4A; }
+  .dot.current { background: #378ADD; border-color: #378ADD; }
+</style>
+
+<div id="app">
+  <div class="screen active" id="screen-quiz">
+    <div class="header">
+      <h1>Quiz: El prisma</h1>
+      <p>Matemáticas · 9°</p>
+    </div>
+
+    <div class="score-bar">
+      <span>Pregunta <strong id="q-current">1</strong> de <strong>10</strong></span>
+      <span>Puntos: <strong id="score-display">0</strong></span>
+    </div>
+
+    <div class="progress-dots" id="progress-dots"></div>
+
+    <div class="timer-bar-wrap">
+      <div class="timer-bar" id="timer-bar"></div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-number" id="q-number">Pregunta 1</div>
+      <div class="q-text" id="q-text"></div>
+    </div>
+
+    <div class="options-grid" id="options-grid"></div>
+
+    <div class="feedback-box" id="feedback-box">
+      <span class="icon" id="feedback-icon"></span>
+      <span id="feedback-text"></span>
+    </div>
+
+    <div class="nav-row">
+      <button class="next-btn" id="next-btn">Siguiente →</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-results">
+    <div class="header">
+      <h1>Resultados</h1>
+      <p>Quiz: El prisma</p>
+    </div>
+    <div class="results-card">
+      <div class="medal" id="medal">🏆</div>
+      <div class="score-big" id="final-score"></div>
+      <div class="score-label">puntos de 1000</div>
+      <div class="results-msg" id="results-msg"></div>
+      <div class="results-sub" id="results-sub"></div>
+      <div class="metrics-row">
+        <div class="metric">
+          <div class="metric-val" id="correct-count">0</div>
+          <div class="metric-lbl">Correctas</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="wrong-count">0</div>
+          <div class="metric-lbl">Incorrectas</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="pct">0%</div>
+          <div class="metric-lbl">Aciertos</div>
+        </div>
+      </div>
+      <button class="restart-btn" onclick="restartQuiz()">Jugar de nuevo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "¿Qué es un prisma?",
+    opts: [
+      "Un poliedro con dos bases poligonales iguales y paralelas unidas por paralelogramos",
+      "Una figura plana con varios lados iguales",
+      "Un sólido con una sola base circular",
+      "Un poliedro donde todas las caras son triángulos"
+    ],
+    ans: 0,
+    exp: "Un prisma tiene dos bases poligonales iguales y paralelas, unidas por caras laterales en forma de paralelogramos."
+  },
+  {
+    q: "¿Cuántos vértices tiene un prisma triangular?",
+    opts: ["3", "4", "6", "9"],
+    ans: 2,
+    exp: "Un prisma triangular tiene 2n vértices. Con n=3, son 2×3 = 6 vértices."
+  },
+  {
+    q: "¿Cuál es la fórmula del Área Lateral de un prisma?",
+    opts: ["A_L = Ab × h", "A_L = P × h", "A_L = P + h", "A_L = 2 × Ab"],
+    ans: 1,
+    exp: "El Área Lateral se calcula multiplicando el Perímetro de la base (P) por la altura del prisma (h): A_L = P × h."
+  },
+  {
+    q: "Un prisma cuadrangular tiene 12 aristas. ¿Cuántas aristas tiene un prisma pentagonal?",
+    opts: ["10", "12", "15", "18"],
+    ans: 2,
+    exp: "Las aristas totales son 3n. Para un prisma pentagonal (n=5): 3×5 = 15 aristas."
+  },
+  {
+    q: "Un prisma triangular tiene base b = 6 cm, altura del triángulo h_b = 4 cm y altura del prisma H = 10 cm. ¿Cuál es su volumen?",
+    opts: ["60 cm³", "100 cm³", "120 cm³", "240 cm³"],
+    ans: 2,
+    exp: "Ab = (6×4)/2 = 12 cm². Luego V = Ab × H = 12 × 10 = 120 cm³."
+  },
+  {
+    q: "¿Qué diferencia a un prisma recto de uno oblicuo?",
+    opts: [
+      "El número de caras laterales",
+      "La forma de la base poligonal",
+      "Si las aristas laterales son perpendiculares o inclinadas respecto a la base",
+      "El tamaño de las bases"
+    ],
+    ans: 2,
+    exp: "En un prisma recto las aristas son perpendiculares (⊥) a la base; en uno oblicuo están inclinadas."
+  },
+  {
+    q: "¿Cuál es la fórmula del Área Total de un prisma?",
+    opts: [
+      "A_T = P × h",
+      "A_T = 2 × Ab",
+      "A_T = P×h + 2×Ab",
+      "A_T = Ab × h"
+    ],
+    ans: 2,
+    exp: "El Área Total = Área Lateral + Área de las dos bases = P×h + 2×Ab."
+  },
+  {
+    q: "Una caja rectangular mide: largo = 8 cm, ancho = 5 cm, alto = 3 cm. ¿Cuál es su volumen?",
+    opts: ["79 cm³", "120 cm³", "158 cm³", "240 cm³"],
+    ans: 1,
+    exp: "V = largo × ancho × alto = 8 × 5 × 3 = 120 cm³."
+  },
+  {
+    q: "¿Cuántas caras laterales tiene un prisma hexagonal?",
+    opts: ["4", "5", "6", "8"],
+    ans: 2,
+    exp: "El número de caras laterales es igual al número de lados de la base. Un hexágono tiene 6 lados → 6 caras laterales."
+  },
+  {
+    q: "¿Cuál es la fórmula del volumen de un prisma con base hexagonal regular de lado a y altura H?",
+    opts: [
+      "V = a² × H",
+      "V = 6 × a × H",
+      "V = (3√3/2) × a² × H",
+      "V = (√3/4) × a² × H"
+    ],
+    ans: 2,
+    exp: "El área del hexágono regular es Ab = (3√3/2)×a², por lo tanto V = Ab × H = (3√3/2) × a² × H."
+  }
+];
+
+let current = 0;
+let score = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let answered = [];
+let timerInterval = null;
+let timeLeft = 20;
+
+function initDots() {
+  const c = document.getElementById('progress-dots');
+  c.innerHTML = '';
+  questions.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' current' : '');
+    d.id = 'dot-' + i;
+    c.appendChild(d);
+  });
+}
+
+function updateDot(i, result) {
+  const d = document.getElementById('dot-' + i);
+  if (!d) return;
+  d.className = 'dot ' + (result ? 'done-correct' : 'done-wrong');
+  const next = document.getElementById('dot-' + (i+1));
+  if (next) next.className = 'dot current';
+}
+
+function startTimer() {
+  timeLeft = 20;
+  const bar = document.getElementById('timer-bar');
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  clearInterval(timerInterval);
+  setTimeout(() => {
+    bar.style.transition = 'width ' + timeLeft + 's linear';
+    bar.style.width = '0%';
+  }, 50);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      autoFail();
+    }
+  }, 1000);
+}
+
+function autoFail() {
+  disableOptions();
+  answered[current] = false;
+  wrongCount++;
+  showFeedback(false, "¡Tiempo agotado! " + questions[current].exp);
+  updateDot(current, false);
+  document.getElementById('next-btn').classList.add('show');
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  document.getElementById('q-number').textContent = 'Pregunta ' + (current + 1);
+  document.getElementById('q-current').textContent = current + 1;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('feedback-box').className = 'feedback-box';
+  document.getElementById('next-btn').classList.remove('show');
+
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+  const classes = ['opt-a', 'opt-b', 'opt-c', 'opt-d'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn ' + classes[i];
+    btn.innerHTML = '<span class="letter">' + letters[i] + '</span><span>' + opt + '</span>';
+    btn.onclick = () => selectAnswer(i, btn);
+    grid.appendChild(btn);
+  });
+  startTimer();
+}
+
+function selectAnswer(i, btn) {
+  clearInterval(timerInterval);
+  const q = questions[current];
+  const correct = i === q.ans;
+  disableOptions();
+  const btns = document.querySelectorAll('.option-btn');
+  btns[q.ans].classList.add('correct');
+  if (!correct) btn.classList.add('wrong');
+
+  if (correct) {
+    const pts = Math.max(100, Math.round(timeLeft / 20 * 100));
+    score += pts;
+    correctCount++;
+    answered[current] = true;
+    showFeedback(true, "¡Correcto! " + q.exp);
+    updateDot(current, true);
+  } else {
+    wrongCount++;
+    answered[current] = false;
+    showFeedback(false, "Incorrecto. " + q.exp);
+    updateDot(current, false);
+  }
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('next-btn').classList.add('show');
+}
+
+function disableOptions() {
+  document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+}
+
+function showFeedback(correct, text) {
+  const box = document.getElementById('feedback-box');
+  const icon = document.getElementById('feedback-icon');
+  const msg = document.getElementById('feedback-text');
+  box.className = 'feedback-box show ' + (correct ? 'correct' : 'wrong');
+  icon.textContent = correct ? '✓' : '✗';
+  msg.innerHTML = text;
+}
+
+document.getElementById('next-btn').onclick = () => {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+};
+
+function showResults() {
+  document.getElementById('screen-quiz').classList.remove('active');
+  document.getElementById('screen-results').classList.add('active');
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('correct-count').textContent = correctCount;
+  document.getElementById('wrong-count').textContent = wrongCount;
+  const pct = Math.round((correctCount / questions.length) * 100);
+  document.getElementById('pct').textContent = pct + '%';
+  let msg, medal;
+  if (pct === 100) { medal = '🏆'; msg = '¡Perfecto! Dominas el tema del prisma.'; }
+  else if (pct >= 80) { medal = '🥇'; msg = '¡Excelente trabajo! Muy buen manejo del tema.'; }
+  else if (pct >= 60) { medal = '🥈'; msg = 'Buen desempeño. Repasa algunas fórmulas.'; }
+  else if (pct >= 40) { medal = '🥉'; msg = 'Vas bien, pero conviene repasar el tema.'; }
+  else { medal = '📚'; msg = 'Te recomendamos revisar la presentación de nuevo.'; }
+  document.getElementById('medal').textContent = medal;
+  document.getElementById('results-msg').textContent = msg;
+  document.getElementById('results-sub').textContent = correctCount + ' de ' + questions.length + ' preguntas correctas';
+}
+
+function restartQuiz() {
+  current = 0; score = 0; correctCount = 0; wrongCount = 0; answered = [];
+  document.getElementById('score-display').textContent = '0';
+  document.getElementById('screen-results').classList.remove('active');
+  document.getElementById('screen-quiz').classList.add('active');
+  initDots();
+  loadQuestion();
+}
+
+initDots();
+loadQuestion();
+</script>
